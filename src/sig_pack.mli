@@ -261,6 +261,11 @@ module type S = sig
       and [g2]: each vertex and edge present in [g1] *and* [g2] is present
       in the resulting graph. *)
 
+  val intersect_old : t -> t -> t
+  (** [intersect_old g1 g2] returns a new graph which is the intersection of [g1]
+      and [g2]: each vertex and edge present in [g1] *and* [g2] is present
+      in the resulting graph. *)
+
   val union : t -> t -> t
   (** [union g1 g2] returns a new graph which is the union of [g1] and [g2]:
       each vertex and edge present in [g1] *or* [g2] is present in the

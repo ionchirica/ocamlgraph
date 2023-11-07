@@ -4,14 +4,14 @@
  (modules check))
 
 (test
- (name test_dfs)
- (libraries graph)
- (modules test_dfs))
-
-(test
  (name test_topsort)
  (libraries graph)
  (modules test_topsort))
+
+(test
+ (name test_oper)
+ (libraries graph graphics)
+ (modules test_oper))
 
 (test
  (name test_check_path)

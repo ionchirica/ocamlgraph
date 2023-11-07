@@ -26,6 +26,7 @@ module type S = sig
   val mirror : g -> g
   val complement : g -> g
   val intersect : g -> g -> g
+  val intersect_old : g -> g -> g
   val union : g -> g -> g
 end
 
@@ -49,18 +50,20 @@ module Make(B : Builder.S) = struct
   let transitive_closure ?(reflexive=false) g0 =
     add_transitive_closure ~reflexive (B.copy g0)
 
-  let mirror g =
-    if G.is_directed then begin
-      let g' =
-        G.fold_vertex
+  let _copy g =
+         G.fold_vertex
           (fun v g' -> B.add_vertex g' v)
           g (B.empty ())
-      in
+
+  let mirror g =
+    if G.is_directed then begin
+      let g' = _copy g in
       G.fold_edges_e
         (fun e g' ->
            let v1 = G.E.src e in
            let v2 = G.E.dst e in
-           B.add_edge_e g' (G.E.create v2 (G.E.label e) v1))
+           B.add_edge_e g'
+             (G.E.create v2 (G.E.label e) v1))
         g g'
     end else
       g
@@ -75,7 +78,7 @@ module Make(B : Builder.S) = struct
            g g')
       g (B.empty ())
 
-  let intersect g1 g2 =
+  let intersect_old g1 g2 =
     G.fold_vertex
       (fun v g ->
          try
@@ -92,12 +95,34 @@ module Make(B : Builder.S) = struct
 
       g1 (B.empty ())
 
+  let intersect g1 g2 =
+    G.fold_vertex
+      (fun v g ->
+        if G.mem_vertex g2 v then
+           G.fold_succ_e
+             (fun e g ->
+                if G.mem_edge_e g2 e
+                then B.add_edge_e g e
+                else g)
+             g1 v (B.add_vertex g v)
+       else
+           (* [v] not in [g2] *)
+           g)
+
+      g1 (B.empty ())
+
+
+
+  (* val fold_vertex : f' -> t -> 'a -> 'a *)
+
   let union g1 g2 =
     let add g1 g2 =
       (* add the graph [g1] in [g2] *)
       G.fold_vertex
         (fun v g ->
-           G.fold_succ_e (fun e g -> B.add_edge_e g e) g1 v (B.add_vertex g v))
+           G.fold_succ_e
+             (fun e g -> B.add_edge_e g e)
+             g1 v (B.add_vertex g v))
         g1 g2
     in
     add g1 (B.copy g2)
